@@ -3,7 +3,7 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <PROGDIR>
-    <NAME>ZTRCKTRSR_BLOG_SELECT_VARIANT</NAME>
+    <NAME>ZTRCKTRSR_BLOG_MAINT_NAV</NAME>
     <STATE>A</STATE>
     <VARCL>X</VARCL>
     <SUBC>1</SUBC>
@@ -14,8 +14,8 @@
    <TPOOL>
     <item>
      <ID>R</ID>
-     <ENTRY>Demoprogramm: Auswahl Reportvarianten in Selectionscreen</ENTRY>
-     <LENGTH>56</LENGTH>
+     <ENTRY>Tricktresor: Pflegedialog Navigator</ENTRY>
+     <LENGTH>35</LENGTH>
     </item>
    </TPOOL>
   </asx:values>
