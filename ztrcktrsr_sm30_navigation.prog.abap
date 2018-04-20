@@ -4,7 +4,7 @@ PARAMETERS p_table TYPE tabname DEFAULT 'ZTT_DEMO1'.
 
 CLASS lcl_tree DEFINITION.
   PUBLIC SECTION.
-    TYPES tt_sellist TYPE STANDARD TABLE OF vimsellist.
+    TYPES tt_sellist           TYPE STANDARD TABLE OF vimsellist.
 
     DATA mo_tree               TYPE REF TO cl_gui_alv_tree_simple.
     DATA mt_sort               TYPE lvc_t_sort. "Sortiertabelle
@@ -12,11 +12,9 @@ CLASS lcl_tree DEFINITION.
     DATA ms_tvdir              TYPE tvdir.
     DATA mv_callstack_counter  TYPE i.
 
-    DATA mt_sellist               TYPE STANDARD TABLE OF vimsellist.
-    DATA mt_x_header              TYPE STANDARD TABLE OF vimdesc.
-    DATA mt_x_namtab              TYPE STANDARD TABLE OF vimnamtab.
-
-
+    DATA mt_sellist            TYPE STANDARD TABLE OF vimsellist.
+    DATA mt_x_header           TYPE STANDARD TABLE OF vimdesc.
+    DATA mt_x_namtab           TYPE STANDARD TABLE OF vimnamtab.
 
     METHODS handle_node_double_click
                   FOR EVENT node_double_click OF cl_gui_alv_tree_simple
@@ -48,7 +46,7 @@ CLASS lcl_tree IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD handle_item_double_click.
-
+    "Pass click on item to handle_node_double_click
     handle_node_double_click(
       grouplevel   = grouplevel
       index_outtab = index_outtab ).
@@ -201,18 +199,13 @@ CLASS lcl_tree IMPLEMENTATION.
                             no_autodef_progid_dynnr = abap_false ).
 
 * create tree control
-    CREATE OBJECT mo_tree
-      EXPORTING
-        i_parent              = docker
-        i_node_selection_mode = cl_gui_column_tree=>node_sel_mode_multiple
-        i_item_selection      = 'X'
-        i_no_html_header      = ''
-        i_no_toolbar          = ''.
+    mo_tree = NEW #( i_parent              = docker
+                     i_node_selection_mode = cl_gui_column_tree=>node_sel_mode_multiple
+                     i_item_selection      = 'X'
+                     i_no_html_header      = ''
+                     i_no_toolbar          = '' ).
 
 
-* repid for saving variants
-    DATA: ls_variant TYPE disvariant.
-    ls_variant-report = sy-repid.
 
 * register events
     register_events( ).
@@ -247,14 +240,12 @@ CLASS lcl_tree IMPLEMENTATION.
           result     = ls_grouplevel-n_image.
       APPEND ls_grouplevel TO lt_grouplevel.
     ENDLOOP.
-*    mo_tree->set_grouplevel_layout( lt_grouplevel ).
-
 
 * create hierarchy
     CALL METHOD mo_tree->set_table_for_first_display
       EXPORTING
         i_save               = 'A'
-        is_variant           = ls_variant
+        is_variant           = value #( report = sy-repid username = sy-uname )
         i_structure_name     = ms_tvdir-tabname
         it_grouplevel_layout = lt_grouplevel
       CHANGING
