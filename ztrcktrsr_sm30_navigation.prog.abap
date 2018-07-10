@@ -2,6 +2,82 @@ REPORT ztrcktrsr_sm30_navigation.
 
 PARAMETERS p_table TYPE tabname DEFAULT 'ZTT_DEMO1'.
 
+CLASS lcx_restart DEFINITION INHERITING FROM cx_no_check.
+  PUBLIC SECTION.
+    DATA grouplevel TYPE lvc_fname.
+    DATA index_outtab TYPE lvc_index.
+    METHODS constructor
+      IMPORTING
+        grouplevel   TYPE lvc_fname
+        index_outtab TYPE lvc_index.
+ENDCLASS.
+
+CLASS lcx_restart IMPLEMENTATION.
+  METHOD  constructor.
+    CALL METHOD super->constructor
+      EXPORTING
+        textid   = textid
+        previous = previous.
+    me->index_outtab = index_outtab .
+    me->grouplevel = grouplevel .
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_helper DEFINITION.
+
+  PUBLIC SECTION.
+
+    CLASS-DATA tree TYPE REF TO cl_gui_alv_tree_simple .
+
+    CLASS-METHODS install_handler
+      IMPORTING
+        i_tree TYPE REF TO cl_gui_alv_tree_simple .
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+
+    CLASS-METHODS handle_node_double_click
+          FOR EVENT node_double_click OF cl_gui_alv_tree_simple
+      IMPORTING
+          index_outtab
+          grouplevel .
+    CLASS-METHODS handle_item_double_click
+          FOR EVENT item_double_click OF cl_gui_alv_tree_simple
+      IMPORTING
+          fieldname
+          index_outtab
+          grouplevel .
+ENDCLASS.
+
+
+
+CLASS lcl_helper IMPLEMENTATION.
+
+  METHOD handle_item_double_click.
+    handle_node_double_click(
+      grouplevel   = grouplevel
+      index_outtab = index_outtab ).
+  ENDMETHOD.
+
+
+  METHOD handle_node_double_click.
+
+    RAISE EXCEPTION TYPE lcx_restart
+      EXPORTING
+        grouplevel   = grouplevel
+        index_outtab = index_outtab.
+
+  ENDMETHOD.
+
+
+  METHOD install_handler.
+
+    tree = i_tree.
+    SET HANDLER handle_node_double_click FOR tree.
+    SET HANDLER handle_item_double_click FOR tree.
+
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS lcl_tree DEFINITION.
   PUBLIC SECTION.
     TYPES tt_sellist           TYPE STANDARD TABLE OF vimsellist.
@@ -16,12 +92,10 @@ CLASS lcl_tree DEFINITION.
     DATA mt_x_header           TYPE STANDARD TABLE OF vimdesc.
     DATA mt_x_namtab           TYPE STANDARD TABLE OF vimnamtab.
 
-    METHODS handle_node_double_click
-                  FOR EVENT node_double_click OF cl_gui_alv_tree_simple
-      IMPORTING grouplevel index_outtab.
-    METHODS handle_item_double_click
-                  FOR EVENT item_double_click OF cl_gui_alv_tree_simple
-      IMPORTING grouplevel index_outtab fieldname.
+    METHODS handle_selection
+      IMPORTING
+        grouplevel   TYPE lvc_fname
+        index_outtab TYPE lvc_index.
     METHODS build_sort_table.
     METHODS register_events.
     METHODS set_view IMPORTING viewname TYPE clike RAISING cx_axt.
@@ -45,15 +119,7 @@ CLASS lcl_tree IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD handle_item_double_click.
-    "Pass click on item to handle_node_double_click
-    handle_node_double_click(
-      grouplevel   = grouplevel
-      index_outtab = index_outtab ).
-
-  ENDMETHOD.
-
-  METHOD handle_node_double_click.
+  METHOD handle_selection.
 
     FIELD-SYMBOLS <lt_data>            TYPE STANDARD TABLE.
     ASSIGN mr_data->* TO <lt_data>.
@@ -107,13 +173,6 @@ CLASS lcl_tree IMPLEMENTATION.
     ENDIF.
 
     CHECK <ls_data> IS ASSIGNED.
-
-    IF mv_callstack_counter > 50.
-      MESSAGE 'Navigation not possible anymore. Sorry' TYPE 'I'.
-      RETURN. "handle_double_click
-    ENDIF.
-
-    ADD 1 TO mv_callstack_counter.
 
     view_maintenance_call( lt_dba_sellist ).
 
@@ -173,23 +232,25 @@ CLASS lcl_tree IMPLEMENTATION.
 
   METHOD register_events.
 
+    lcl_helper=>install_handler( mo_tree ).
+*    zcl_helper_sm30_nav=>install_handler( mo_tree ).
+
+
     mo_tree->set_registered_events( VALUE #(
           "Used here for applying current data selection
           ( eventid = cl_gui_column_tree=>eventid_node_double_click )
           ( eventid = cl_gui_column_tree=>eventid_item_double_click )
           "Important! If not registered nodes will not expand ->No data
-          ( eventid = cl_gui_column_tree=>eventid_expand_no_children ) ) ).
+          ( eventid = cl_gui_column_tree=>eventid_expand_no_children ) ) ) .
 
-    SET HANDLER handle_node_double_click FOR mo_tree.
-    SET HANDLER handle_item_double_click FOR mo_tree.
 
   ENDMETHOD.                               " register_events
 
 
   METHOD init_tree.
-
-    get_view_data( ).
-    build_sort_table( ).
+* STEFAN - zum Testen HINTER die Treeerzeugung geschoben weil ich den Event brauche
+*    get_view_data( )." Stefan verschoben nach unten hinter treeerzeugung
+*    build_sort_table( )." Stefan verschoben nach unten hinter treeerzeugung
 
     DATA(docker) = NEW cl_gui_docking_container(
                             ratio = 25
@@ -206,6 +267,9 @@ CLASS lcl_tree IMPLEMENTATION.
                      i_no_toolbar          = '' ).
 
 
+
+    get_view_data( ).
+    build_sort_table( ).
 
 * register events
     register_events( ).
@@ -245,7 +309,7 @@ CLASS lcl_tree IMPLEMENTATION.
     CALL METHOD mo_tree->set_table_for_first_display
       EXPORTING
         i_save               = 'A'
-        is_variant           = value #( report = sy-repid username = sy-uname )
+        is_variant           = VALUE #( report = sy-repid username = sy-uname )
         i_structure_name     = ms_tvdir-tabname
         it_grouplevel_layout = lt_grouplevel
       CHANGING
@@ -267,24 +331,30 @@ CLASS lcl_tree IMPLEMENTATION.
 
   METHOD view_maintenance_call.
 
-    CALL FUNCTION 'VIEW_MAINTENANCE_CALL'
-      EXPORTING
-        action      = 'S'
-        view_name   = ms_tvdir-tabname
-      TABLES
-        dba_sellist = it_sellist
-      EXCEPTIONS
-        OTHERS      = 15.
+    TRY.
+        CALL FUNCTION 'VIEW_MAINTENANCE_CALL'
+          EXPORTING
+            action      = 'S'
+            view_name   = ms_tvdir-tabname
+          TABLES
+            dba_sellist = it_sellist
+          EXCEPTIONS
+            OTHERS      = 15.
+*      CATCH zcx_helper_sm30_nav INTO DATA(restart).
+      CATCH lcx_restart INTO DATA(restart).
+        handle_selection( EXPORTING
+          grouplevel   = restart->grouplevel
+          index_outtab = restart->index_outtab ).
+
+    ENDTRY.
 
   ENDMETHOD.
 ENDCLASS.
 
 
+
 START-OF-SELECTION.
   CHECK main IS INITIAL.
   main = NEW #( ).
-  TRY.
-      main->set_view( viewname = p_table ).
-      main->init_tree( ).
-    CATCH cx_axt.
-  ENDTRY.
+  main->set_view( viewname = p_table ).
+  main->init_tree( ).

@@ -3,17 +3,13 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <PROGDIR>
-    <NAME>SAPLZTT_DEMO_01</NAME>
+    <NAME>LZTT_DEMO_01F01</NAME>
     <STATE>A</STATE>
     <SQLX>X</SQLX>
     <VARCL>X</VARCL>
-    <DBAPL>S</DBAPL>
-    <DBNA>D$</DBNA>
-    <SUBC>F</SUBC>
+    <SUBC>I</SUBC>
     <APPL>S</APPL>
-    <RLOAD>D</RLOAD>
-    <FIXPT>X</FIXPT>
-    <LDBNAME>D$S</LDBNAME>
+    <RLOAD>E</RLOAD>
     <UCCHECK>X</UCCHECK>
    </PROGDIR>
   </asx:values>

@@ -13,7 +13,7 @@
     <LANGUAGE>D</LANGUAGE>
     <OBJECTNAME>ZTT_DEMO1</OBJECTNAME>
     <OBJECTTYPE>S</OBJECTTYPE>
-    <DDTEXT>Tricktresor demonstration table with lots of key fields</DDTEXT>
+    <DDTEXT>Tricktresor Demotabelle viele Schlüsselfelder</DDTEXT>
    </OBJT>
    <OBJS>
     <OBJS>
@@ -36,10 +36,15 @@
      <TYPE>1</TYPE>
      <LISTE>0600</LISTE>
      <BASTAB>X</BASTAB>
-     <GENDATE>2018-04-18</GENDATE>
-     <GENTIME>21:46:59</GENTIME>
      <FLAG>X</FLAG>
     </TVDIR>
+    <TVIMF>
+     <TVIMF>
+      <TABNAME>ZTT_DEMO1</TABNAME>
+      <EVENT>19</EVENT>
+      <FORMNAME>ZTG_EVENT_19</FORMNAME>
+     </TVIMF>
+    </TVIMF>
    </TOBJ>
   </asx:values>
  </asx:abap>
