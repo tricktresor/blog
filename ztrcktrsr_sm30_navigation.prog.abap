@@ -48,16 +48,12 @@ CLASS lcl_helper DEFINITION.
           grouplevel .
 ENDCLASS.
 
-
-
 CLASS lcl_helper IMPLEMENTATION.
-
   METHOD handle_item_double_click.
     handle_node_double_click(
       grouplevel   = grouplevel
       index_outtab = index_outtab ).
   ENDMETHOD.
-
 
   METHOD handle_node_double_click.
 
@@ -65,16 +61,12 @@ CLASS lcl_helper IMPLEMENTATION.
       EXPORTING
         grouplevel   = grouplevel
         index_outtab = index_outtab.
-
   ENDMETHOD.
 
-
   METHOD install_handler.
-
     tree = i_tree.
     SET HANDLER handle_node_double_click FOR tree.
     SET HANDLER handle_item_double_click FOR tree.
-
   ENDMETHOD.
 ENDCLASS.
 
@@ -233,8 +225,6 @@ CLASS lcl_tree IMPLEMENTATION.
   METHOD register_events.
 
     lcl_helper=>install_handler( mo_tree ).
-*    zcl_helper_sm30_nav=>install_handler( mo_tree ).
-
 
     mo_tree->set_registered_events( VALUE #(
           "Used here for applying current data selection
@@ -248,9 +238,6 @@ CLASS lcl_tree IMPLEMENTATION.
 
 
   METHOD init_tree.
-* STEFAN - zum Testen HINTER die Treeerzeugung geschoben weil ich den Event brauche
-*    get_view_data( )." Stefan verschoben nach unten hinter treeerzeugung
-*    build_sort_table( )." Stefan verschoben nach unten hinter treeerzeugung
 
     DATA(docker) = NEW cl_gui_docking_container(
                             ratio = 25
@@ -340,7 +327,6 @@ CLASS lcl_tree IMPLEMENTATION.
             dba_sellist = it_sellist
           EXCEPTIONS
             OTHERS      = 15.
-*      CATCH zcx_helper_sm30_nav INTO DATA(restart).
       CATCH lcx_restart INTO DATA(restart).
         handle_selection( EXPORTING
           grouplevel   = restart->grouplevel
